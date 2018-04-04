@@ -7,18 +7,21 @@ mac_list = list()                               # used to identify bind devices
 file = ''
 
 """ Opens file and grabs mac and appends to mac_list"""
-temp_file = open(data_file, 'r')                # Opens file as read only
-for sentence in temp_file:                      # Grabs pre-existing data
-    temp_mac, __, __ = sentence.split()         # Need mac as identifier
-    mac_list.append(temp_mac)                   # Means device already bind don't add
-temp_file.close()                               # close file
+try:
+    temp_file = open(data_file, 'r')                # Opens file as read only
+    for sentence in temp_file:                      # Grabs pre-existing data
+        temp_mac, __, __ = sentence.split()         # Need mac as identifier
+        mac_list.append(temp_mac)                   # Means device already bind don't add
+    temp_file.close()                               # close file
+except IOError:                                     # file is empty will continue
+    pass
 
 """ Connect to DHCP Server and obtain bindings"""
 DHCP_Server = FastIron('10.176.217.148')        # Connects to DHCP Server
 DHCP_Server.open()                              # Opens connection
 bindings = DHCP_Server.obtain_binding()         # Parses bindings returns dictionary
 
-""" Save binding to a file"""
+""" Save bindings to a file"""
 file = open(data_file, 'a')                     # Opens saving file
 for mac_key in bindings:                        # grabs mac
     if mac_key not in mac_list:                 # checks if device not in binding
@@ -30,11 +33,16 @@ for mac_key in bindings:                        # grabs mac
 file.close()                                    # closed file
 DHCP_Server.close()                             # DHCP server connection closed
 
-
 """Connect to devices using IP bindings obtained"""
+current_file = open(data_file, 'r')
 
-"""Push default security configuration"""
-
+for data in current_file.readlines():           #
+    __, ip, __ = data.split()                   #
+    telnet_switch = FastIron(ip)                #
+    telnet_switch.open()                        #
+    """Push default security configuration"""
+    telnet_switch.close()                       #
+current_file.close()
 """Grab Actual security configuration"""
 
 """Map serial # to configuration and push respective config"""
